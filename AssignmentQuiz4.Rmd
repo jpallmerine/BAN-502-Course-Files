@@ -1,0 +1,99 @@
+
+```{r }
+library(tidyverse)
+library(tidymodels)
+library(GGally)
+library(gridExtra) #used for a little fancy arranging of plots
+library(car) #for the VIF function
+library(glmnet)
+library(ggcorrplot)
+library(MASS)
+library(lubridate)
+library(lmtest)
+library(splines)
+
+bike = read.csv("bike_cleaned-3.csv")
+
+summary(bike)
+structure(bike)
+
+bike = bike %>% mutate(dteday = mdy(dteday))
+bike = bike %>% mutate_if(is.character, as_factor)
+bike = bike %>% mutate(hr = as_factor(hr))
+```
+
+```{r}
+ggcorr(bike,label = TRUE,label_round = 4)
+```
+
+```{r}
+ggplot(bike,aes(x=hr,y=count)) + geom_boxplot() + theme_bw()
+
+```
+
+```{r}
+bike_recipe = recipe(count ~ hr, bike)
+
+lm_model = #give the model type a name 
+  linear_reg() %>% #specify that we are doing linear regression
+  set_engine("lm") #specify the specify type of linear tool we want to use 
+
+lm_wflow = 
+  workflow() %>% 
+  add_model(lm_model) %>% 
+  add_recipe(bike_recipe)
+
+lm_fit = fit(lm_wflow, bike)
+
+summary(lm_fit$fit$fit$fit)
+
+```
+
+```{r}
+ggplot(bike, aes(x=temp, y=count)) + geom_point()
+```
+
+```{r}
+bike_recipe2 = recipe(count ~ hr + temp, bike)
+
+lm_model2 = #give the model type a name 
+  linear_reg() %>% #specify that we are doing linear regression
+  set_engine("lm") #specify the specify type of linear tool we want to use 
+
+lm_wflow2 = 
+  workflow() %>% 
+  add_model(lm_model2) %>% 
+  add_recipe(bike_recipe2)
+
+lm_fit = fit(lm_wflow2, bike)
+
+summary(lm_fit$fit$fit$fit)
+```
+
+```{r}
+bike_recipe3 = recipe(count ~ atemp + temp, bike)
+
+lm_model3 = #give the model type a name 
+  linear_reg() %>% #specify that we are doing linear regression
+  set_engine("lm") #specify the specify type of linear tool we want to use 
+
+lm_wflow3 = 
+  workflow() %>% 
+  add_model(lm_model3) %>% 
+  add_recipe(bike_recipe3)
+
+lm_fit = fit(lm_wflow3, bike)
+
+summary(lm_fit$fit$fit$fit)
+```
+
+```{r}
+allmod = lm(count ~ season + mnth + hr + holiday + weekday + workingday + weathersit + temp + atemp + hum + windspeed, bike) #use the ~. to include all predictors rather than typing them all in
+summary(allmod)
+```
+
+```{r}
+allmod = lm(count ~ ., bike) #use the ~. to include all predictors rather than typing them all in
+summary(allmod)
+```
+
